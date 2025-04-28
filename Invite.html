@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skanda's Birthday Invitation</title>
+<style>
+       body {
+           margin: 0;
+           padding: 0;
+           background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+           font-family: 'Comic Sans MS', cursive, sans-serif;
+           height: 100vh;
+           overflow-x: hidden;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           flex-direction: column;
+           text-align: center;
+       }
+       .card {
+           width: 300px;
+           height: 400px;
+           background: white;
+           border-radius: 15px;
+           box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+           transform: perspective(600px) rotateY(0deg);
+           transition: transform 1s;
+           position: relative;
+           overflow: hidden;
+           cursor: pointer;
+       }
+       .card.open {
+           transform: perspective(600px) rotateY(180deg);
+       }
+       .card-front, .card-back {
+           position: absolute;
+           width: 100%;
+           height: 100%;
+           backface-visibility: hidden;
+           padding: 20px;
+       }
+       .card-front {
+           background: #ff9a9e;
+           display: flex;
+           flex-direction: column;
+           justify-content: center;
+           align-items: center;
+           color: white;
+           font-size: 1.5em;
+       }
+       .card-back {
+           background: #fff;
+           color: #333;
+           transform: rotateY(180deg);
+           display: flex;
+           flex-direction: column;
+           justify-content: center;
+           align-items: center;
+       }
+       .countdown {
+           margin-top: 20px;
+           font-size: 1.2em;
+           color: white;
+       }
+       .save-date {
+           margin-top: 20px;
+       }
+       .save-date button {
+           background: #ff5e62;
+           color: white;
+           padding: 10px 20px;
+           border: none;
+           border-radius: 25px;
+           font-size: 1em;
+           cursor: pointer;
+           transition: background 0.3s;
+       }
+       .save-date button:hover {
+           background: #ff9966;
+       }
+       canvas {
+           position: fixed;
+           top: 0;
+           left: 0;
+           pointer-events: none;
+           width: 100%;
+           height: 100%;
+           z-index: -1;
+       }
+</style>
+</head>
+<body>
+<!-- Birthday Music (Autoplay) -->
+<audio id="birthday-music" autoplay loop>
+<source src="your-birthday-music.mp3" type="audio/mp3">
+   Your browser does not support the audio element.
+</audio>
+<canvas id="confetti"></canvas>
+<div class="card" onclick="this.classList.toggle('open')">
+<div class="card-front">
+<div>🎉 You're Invited! 🎉</div>
+<div>Click to Open</div>
+</div>
+<div class="card-back">
+<h2>Skanda's Birthday Party</h2>
+<p>Date: June 16, 2025</p>
+<p>Time: 6:00 PM IST</p>
+<p>Venue: Celebration hall, Udyambag</p>
+<p>Let's Celebrate Together!</p>
+</div>
+</div>
+<div class="countdown">
+   Countdown: <span id="timer"></span>
+</div>
+<div class="save-date">
+<button onclick="saveTheDate()">Save the Date</button>
+</div>
+<script>
+// Countdown Timer
+const targetDate = new Date("2025-05-15T18:00:00");
+function updateTimer() {
+   const now = new Date();
+   const diff = targetDate - now;
+   if (diff <= 0) {
+       document.getElementById("timer").innerHTML = "Party Time!";
+       return;
+   }
+   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+   const minutes = Math.floor((diff / (1000 * 60)) % 60);
+   const seconds = Math.floor((diff / 1000) % 60);
+   document.getElementById("timer").innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+setInterval(updateTimer, 1000);
+updateTimer();
+// Confetti
+const canvas = document.getElementById('confetti');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const confetti = [];
+for(let i=0; i<150; i++) {
+   confetti.push({
+       x: Math.random() * canvas.width,
+       y: Math.random() * canvas.height - canvas.height,
+       r: Math.random() * 6 + 4,
+       d: Math.random() * 50 + 10,
+       color: `hsl(${Math.random()*360},100%,50%)`,
+       tilt: Math.random() * 10 - 10,
+       tiltAngleIncremental: Math.random() * 0.07 + .05,
+       tiltAngle: 0
+   });
+}
+function draw() {
+   ctx.clearRect(0,0,canvas.width,canvas.height);
+   for(let i=0; i<confetti.length; i++) {
+       const c = confetti[i];
+       ctx.beginPath();
+       ctx.lineWidth = c.r;
+       ctx.strokeStyle = c.color;
+       ctx.moveTo(c.x + c.tilt + c.r / 2, c.y);
+       ctx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r / 2);
+       ctx.stroke();
+   }
+   update();
+}
+function update() {
+   for(let i=0; i<confetti.length; i++) {
+       const c = confetti[i];
+       c.tiltAngle += c.tiltAngleIncremental;
+       c.y += (Math.cos(c.d) + 3 + c.r / 2) / 2;
+       c.tilt = Math.sin(c.tiltAngle - (i / 3)) * 15;
+       if (c.y > canvas.height) {
+           confetti[i] = {
+               x: Math.random() * canvas.width,
+               y: -10,
+               r: c.r,
+               d: c.d,
+               color: c.color,
+               tilt: Math.random() * 10 - 10,
+               tiltAngleIncremental: c.tiltAngleIncremental,
+               tiltAngle: c.tiltAngle
+           };
+       }
+   }
+}
+(function animate() {
+   requestAnimationFrame(animate);
+   draw();
+})();
+window.addEventListener('resize', function() {
+   canvas.width = window.innerWidth;
+   canvas.height = window.innerHeight;
+});
+// Save the Date
+function saveTheDate() {
+   const event = `
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:Skanda's Birthday Party
+DESCRIPTION:Join us for Skanda's Birthday Celebration!
+LOCATION:[Insert Location]
+DTSTART:20250515T180000
+DTEND:20250515T200000
+END:VEVENT
+END:VCALENDAR
+   `;
+   const blob = new Blob([event], { type: 'text/calendar;charset=utf-8' });
+   const link = document.createElement('a');
+   link.href = URL.createObjectURL(blob);
+   link.download = "skanda-birthday.ics";
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+}
+</script>
+</body>
+</html>
